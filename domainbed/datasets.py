@@ -28,6 +28,7 @@ DATASETS = [
     "TerraIncognita",
     "DomainNet",
     "SVIRO",
+    "NicoPlusPlus",
     # WILDS datasets
     "WILDSCamelyon",
     "WILDSFMoW"
@@ -257,6 +258,14 @@ class SVIRO(MultipleEnvironmentImageFolder):
     ENVIRONMENTS = ["aclass", "escape", "hilux", "i3", "lexus", "tesla", "tiguan", "tucson", "x5", "zoe"]
     def __init__(self, root, test_envs, hparams):
         self.dir = os.path.join(root, "sviro/")
+        super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
+
+class NicoPlusPlus(MultipleEnvironmentImageFolder):
+    CHECKPOINT_FREQ = 300
+    N_WORKERS=1
+    ENVIRONMENTS = ["autumn", "dim", "grass", "outdoor", "rock", "water"]
+    def __init__(self, root, test_envs, hparams):
+        self.dir = os.path.join(root, "nico_pp/")
         super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
 
 
