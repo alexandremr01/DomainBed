@@ -3,6 +3,7 @@ from domainbed.partitioners.decorr import Decorr
 
 PARTITIONERS = {
     'Echo': EchoPartitioner,
+    'Decorr': Decorr
 }
 def get_partitioner_class(algorithm_name):
     """Return the partitioner class with the given name."""
