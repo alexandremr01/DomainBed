@@ -24,6 +24,8 @@ from domainbed import partitioners
 from domainbed.lib import misc
 from domainbed.lib.fast_data_loader import InfiniteDataLoader, FastDataLoader
 
+import domainbed.partitioners
+
 if __name__ == "__main__":
     torch.cuda.empty_cache()
     parser = argparse.ArgumentParser(description='Domain partition')
