@@ -19,7 +19,7 @@ DATASETS = [
     # Debug
     "Debug28",
     "Debug224",
-    # Small imagesRF
+    # Small images
     "ColoredMNIST",
     "RotatedMNIST",
     # Big images
@@ -30,6 +30,7 @@ DATASETS = [
     "DomainNet",
     "SVIRO",
     "NicoPlusPlus",
+    "HappyFaces",
     # WILDS datasets
     "WILDSCamelyon",
     "WILDSFMoW"
@@ -308,17 +309,6 @@ class HappyFaces(MultipleEnvironmentImageFolder):
     def __init__(self, root, test_envs, hparams):
         self.dir = os.path.join(root, "happy_faces/")
         super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
-
-
-class ModifiedHappyFaces(MultipleEnvironmentImageFolder):
-    CHECKPOINT_FREQ = 50
-    N_STEPS = 151  
-    N_WORKERS = 2
-    ENVIRONMENTS = ["training", "validation"]
-    def __init__(self, root, test_envs, hparams):
-        self.dir = os.path.join(root, "modified_happy_faces/")
-        super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
-
 
 
 class WILDSEnvironment:

@@ -6,7 +6,8 @@ from tqdm import tqdm
 
 class EIIL(Partitioner):
     """
-    Applies Environment Inference for Invariant Learning.
+    Implementation of the EIIL algorithm, as seen in Environment Inference 
+    for Invariant Learning, Creager et al. 2021.
     Required hparams: lr, n_steps, batch_size, num_workers
     """
     def __init__(self, hparams):

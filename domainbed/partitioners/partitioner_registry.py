@@ -1,9 +1,11 @@
 from domainbed.partitioners.echo import EchoPartitioner
 from domainbed.partitioners.decorr import Decorr
+from domainbed.partitioners.eiil import EIIL
 
 PARTITIONERS = {
     'Echo': EchoPartitioner,
-    'Decorr': Decorr
+    'Decorr': Decorr,
+    'EIIL': EIIL
 }
 def get_partitioner_class(algorithm_name):
     """Return the partitioner class with the given name."""
