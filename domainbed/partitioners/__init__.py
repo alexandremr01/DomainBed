@@ -1,1 +1,3 @@
 from domainbed.partitioners.partitioner_registry import get_partitioner_class
+from domainbed.partitioners.eiil import EIIL
+from domainbed.partitioners.partition import Partition

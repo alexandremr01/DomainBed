@@ -18,6 +18,7 @@ import torch.utils.data
 from domainbed import datasets
 from domainbed import hparams_registry
 from domainbed import algorithms
+from domainbed import partitioners
 from domainbed.lib import misc
 from domainbed.lib.fast_data_loader import InfiniteDataLoader, FastDataLoader
 
@@ -48,6 +49,7 @@ if __name__ == "__main__":
         help="For domain adaptation, % of test to use unlabeled for training.")
     parser.add_argument('--skip_model_save', action='store_true')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
+    parser.add_argument('--partition_file', type=str, default=None)
     args = parser.parse_args()
 
     # If we ever want to implement checkpointing, just persist these values
@@ -56,6 +58,7 @@ if __name__ == "__main__":
     algorithm_dict = None
 
     os.makedirs(args.output_dir, exist_ok=True)
+    
     sys.stdout = misc.Tee(os.path.join(args.output_dir, 'out.txt'))
     sys.stderr = misc.Tee(os.path.join(args.output_dir, 'err.txt'))
 
@@ -100,6 +103,14 @@ if __name__ == "__main__":
             args.test_envs, hparams)
     else:
         raise NotImplementedError
+
+    if args.partition_file is not None:
+      partitions = partitioners.Partition(dataset)
+      partitions.load(args.partition_file)
+      dataset.reorganize_environments(partitions)
+      args.test_envs = dataset.test_envs
+    
+    print('Environment sizes: ', [len(env) for env in dataset])
 
     # Split each env into an 'in-split' and an 'out-split'. We'll train on
     # each in-split except the test envs, and evaluate on all splits.
@@ -160,7 +171,7 @@ if __name__ == "__main__":
 
     eval_loaders = [FastDataLoader(
         dataset=env,
-        batch_size=64,
+        batch_size=16,
         num_workers=dataset.N_WORKERS)
         for env, _ in (in_splits + out_splits + uda_splits)]
     eval_weights = [None for _, weights in (in_splits + out_splits + uda_splits)]
@@ -206,6 +217,7 @@ if __name__ == "__main__":
     last_results_keys = None
     for step in range(start_step, n_steps):
         step_start_time = time.time()
+
         minibatches_device = [(x.to(device), y.to(device))
             for x,y in next(train_minibatches_iterator)]
         if args.task == "domain_adaptation":
@@ -214,6 +226,7 @@ if __name__ == "__main__":
         else:
             uda_device = None
         step_vals = algorithm.update(minibatches_device, uda_device)
+
         checkpoint_vals['step_time'].append(time.time() - step_start_time)
 
         for key, val in step_vals.items():
@@ -262,3 +275,5 @@ if __name__ == "__main__":
 
     with open(os.path.join(args.output_dir, 'done'), 'w') as f:
         f.write('done')
+    sys.stdout = sys.__stdout__
+    sys.stderr = sys.__stderr__

@@ -8,6 +8,7 @@ import torchvision.datasets.folder
 from torch.utils.data import TensorDataset, Subset
 from torchvision.datasets import MNIST, ImageFolder
 from torchvision.transforms.functional import rotate
+import numpy as np
 
 from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
 from wilds.datasets.fmow_dataset import FMoWDataset
@@ -18,7 +19,7 @@ DATASETS = [
     # Debug
     "Debug28",
     "Debug224",
-    # Small images
+    # Small imagesRF
     "ColoredMNIST",
     "RotatedMNIST",
     # Big images
@@ -217,6 +218,36 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
 
         self.input_shape = (3, 224, 224,)
         self.num_classes = len(self.datasets[-1].classes)
+        self.test_envs = test_envs
+
+    def reorganize_environments(self, partition): 
+      num_new_environments = partition.get_number()
+      print('Reorganized to ', num_new_environments, 'environments')
+      new_datasets = [None] * num_new_environments
+      new_env_ix = 0
+      mapping = partition.get_mapping_original_to_new()
+      for i in range(num_new_environments):
+        new_datasets_env = [ ]
+        for original_env_ix in range(len(self)):
+          if mapping.get(original_env_ix) is None:
+            continue
+          # subset of the original env that is assigned to the new env
+          indexes = np.argwhere(np.array(mapping[original_env_ix]) == new_env_ix).flatten()
+          sub = torch.utils.data.Subset(self[original_env_ix], indexes)
+          new_datasets_env.append(sub)
+        new_datasets[new_env_ix] = torch.utils.data.ConcatDataset(new_datasets_env)
+        new_env_ix+=1
+
+      new_test_envs = [ ]
+      for env in self.test_envs:
+        new_datasets.append(self[env])
+        new_test_envs.append(new_env_ix)
+        new_env_ix += 1
+      print('New test envs:', new_test_envs)
+
+      self.test_envs = new_test_envs        
+      self.datasets = new_datasets
+
 
 class VLCS(MultipleEnvironmentImageFolder):
     CHECKPOINT_FREQ = 300
@@ -261,12 +292,33 @@ class SVIRO(MultipleEnvironmentImageFolder):
         super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
 
 class NicoPlusPlus(MultipleEnvironmentImageFolder):
-    CHECKPOINT_FREQ = 300
-    N_WORKERS=1
+    CHECKPOINT_FREQ = 50
+    N_STEPS = 201  
+    N_WORKERS = 2
     ENVIRONMENTS = ["autumn", "dim", "grass", "outdoor", "rock", "water"]
     def __init__(self, root, test_envs, hparams):
-        self.dir = os.path.join(root, "nico_pp/")
+        self.dir = os.path.join(root, "reduced_nico++/")
         super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
+
+class HappyFaces(MultipleEnvironmentImageFolder):
+    CHECKPOINT_FREQ = 50
+    N_STEPS = 151  
+    N_WORKERS = 2
+    ENVIRONMENTS = ["training", "validation"]
+    def __init__(self, root, test_envs, hparams):
+        self.dir = os.path.join(root, "happy_faces/")
+        super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
+
+
+class ModifiedHappyFaces(MultipleEnvironmentImageFolder):
+    CHECKPOINT_FREQ = 50
+    N_STEPS = 151  
+    N_WORKERS = 2
+    ENVIRONMENTS = ["training", "validation"]
+    def __init__(self, root, test_envs, hparams):
+        self.dir = os.path.join(root, "modified_happy_faces/")
+        super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
+
 
 
 class WILDSEnvironment:
